@@ -1,0 +1,13 @@
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.crash
+.terraform.lock.hcl
+
+# VS Code
+.vscode/
+
+# OS-specific
+.DS_Store
+Thumbs.db
