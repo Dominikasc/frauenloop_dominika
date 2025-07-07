@@ -16,7 +16,7 @@ provider "azurerm" {
 
 resource "azurerm_resource_group" "rg" {
   name     = "frauenloop-resources"
-  location = "westus2"
+  location = "germanywestcentral"
 }
 
 resource "azurerm_storage_account" "fl_storage_account" {
