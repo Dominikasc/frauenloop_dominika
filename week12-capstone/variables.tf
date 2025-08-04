@@ -29,3 +29,9 @@ variable "storage_account_name" {
 variable "storage_container_name" {
   default = "flwebappcontainer"
 }
+
+variable "user_object_id" {
+  description = "The Object ID of the Terraform user"
+  type        = string
+  sensitive   = true
+}

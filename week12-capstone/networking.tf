@@ -144,20 +144,23 @@ resource "azurerm_linux_virtual_machine" "backend" {
     size                    = "Standard_B1s"
     admin_username          = "azureuser"
 
+    identity { 
+      type = "SystemAssigned" 
+      }
     os_disk {
-    name        = "webappOsDisk"
-    caching     = "ReadWrite"
-    storage_account_type = "Standard_LRS"
-    }
+      name        = "webappOsDisk"
+      caching     = "ReadWrite"
+      storage_account_type = "Standard_LRS"
+      }
     admin_ssh_key {
-    username = "azureuser"
-    public_key = file("~/.ssh/week07_key.pub")
+      username = "azureuser"
+      public_key = file("~/.ssh/week07_key.pub")
     }
     source_image_reference {
-        publisher = "Canonical"
-        offer = "UbuntuServer"
-        sku = "18.04-LTS"
-        version = "latest"
+      publisher = "Canonical"
+      offer = "UbuntuServer"
+      sku = "18.04-LTS"
+      version = "latest"
     }
     disable_password_authentication = true
 }
@@ -198,3 +201,25 @@ resource "azurerm_network_interface_security_group_association" "backend_nic_nsg
 }
 
 
+resource "azurerm_network_security_group" "integration_nsg" {
+  name                = "integration-nsg"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.rg.name
+
+  security_rule {
+    name                       = "AllowOutboundToBackend"
+    priority                   = 100
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "3000"
+    destination_address_prefix = azurerm_subnet.backend.address_prefixes[0]
+    source_address_prefix      = "*"
+  }
+}
+
+resource "azurerm_subnet_network_security_group_association" "integration_nsg_assoc" {
+  subnet_id                 = azurerm_subnet.integration.id
+  network_security_group_id = azurerm_network_security_group.integration_nsg.id
+}

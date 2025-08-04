@@ -19,7 +19,7 @@ resource "azurerm_storage_container" "storage_container" {
 resource "azurerm_storage_blob" "blob" {
   name                   = "image.zip"
   storage_account_name   = azurerm_storage_account.fl_storage_account.name
-  storage_container_name = var.storage_container_name
+  storage_container_name = azurerm_storage_container.storage_container.name
   type                   = "Block"
   source                 = "${path.module}/image.zip"      
 }
@@ -37,28 +37,21 @@ resource "azurerm_key_vault" "fl_key_vault" {
 
   access_policy {
     tenant_id = data.azurerm_client_config.current.tenant_id
-    object_id = data.azurerm_client_config.current.object_id
-
-    key_permissions = [
-      "Get",
-    ]
-
-    secret_permissions = [
-      "Get",
-    ]
-
-    storage_permissions = [
-      "Get",
-    ]
-  }
-  access_policy {
-    tenant_id = data.azurerm_client_config.current.tenant_id
     object_id = azurerm_linux_web_app.frontend.identity[0].principal_id
 
     secret_permissions = [
       "Get",
     ]
   }
+}
+
+resource "azurerm_key_vault_access_policy" "terraform_user" {
+  key_vault_id = azurerm_key_vault.fl_key_vault.id
+
+  tenant_id = data.azurerm_client_config.current.tenant_id
+  object_id = var.user_object_id
+
+  secret_permissions = ["Get", "Set", "Delete", "List"]
 }
 
 # Store a sample connection string

@@ -2,6 +2,7 @@
 *.tfstate
 *.tfstate.*
 .terraform/
+.tfvars
 .crash
 .terraform.lock.hcl
 

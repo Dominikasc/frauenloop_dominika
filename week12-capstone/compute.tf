@@ -17,7 +17,7 @@ resource "azurerm_linux_web_app" "frontend" {
   identity {
     type = "SystemAssigned"
   }
-  
+
   site_config {
     application_stack {
       node_version = "12-lts"
@@ -29,22 +29,14 @@ resource "azurerm_linux_web_app" "frontend" {
   }
 }
 
+# App Service Monitoring
+
 resource "azurerm_log_analytics_workspace" "main" {
   name                = "webappanalytics"
   location            = var.location
   resource_group_name = azurerm_resource_group.rg.name
   sku                 = "PerGB2018"
   retention_in_days   = 30
-}
-
-locals {
-  web_app_logs = ["AppServiceConsoleLogs",
-                  "AppServiceEnvironmentPlatformLogs",
-                  "AppServiceAuditLogs",
-                  "AppServiceFileAuditLogs",
-                  "AppServiceAppLogs",
-                  "AppServiceIPSecAuditLogs",
-                  "AppServicePlatformLogs"]
 }
 
 resource "azurerm_monitor_diagnostic_setting" "appservice_diagnostics" {
@@ -57,52 +49,25 @@ resource "azurerm_monitor_diagnostic_setting" "appservice_diagnostics" {
     enabled  = true
   }
   
-  dynamic "log" {
-    for_each = local.web_app_logs
-    content {
-        category = log.value
-        enabled  = true
+  log {
+    category = "AuditEvent"
+    enabled  = true
 
-        retention_policy {
-        enabled = false
-        days    = 0
-        }
-    }
-}
-}
-
-resource "azurerm_monitor_action_group" "main" {
-  name                = "webapp-storage-actiongroup"
-  resource_group_name = azurerm_resource_group.rg.name
-  short_name          = "exampleact"
-
-  webhook_receiver {
-    name        = "callmyapi"
-    service_uri = "http://webapp.com/alert"
-  }
-}
-
-resource "azurerm_monitor_metric_alert" "storage_diagnostics" {
-  name                = "storage-metricalert"
-  resource_group_name = azurerm_resource_group.rg.name
-  scopes              = [azurerm_storage_account.fl_storage_account.id]
-  description         = "Action will be triggered when Transactions count is greater than 50."
-
-  criteria {
-    metric_namespace = "Microsoft.Storage/storageAccounts"
-    metric_name      = "Transactions"
-    aggregation      = "Total"
-    operator         = "GreaterThan"
-    threshold        = 50
-
-    dimension {
-      name     = "ApiName"
-      operator = "Include"
-      values   = ["*"]
+    retention_policy {
+      enabled = false
     }
   }
+}
 
-  action {
-    action_group_id = azurerm_monitor_action_group.main.id
+# Storage account monitoring
+
+resource "azurerm_monitor_diagnostic_setting" "storage_diag" {
+  name                       = "storage-diag"
+  target_resource_id         = azurerm_storage_account.fl_storage_account.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
+
+  metric {
+    category = "AllMetrics"
+    enabled  = true
   }
 }
