@@ -35,22 +35,30 @@ resource "azurerm_key_vault" "fl_key_vault" {
 
   sku_name = "standard"
 
-  # access_policy {
-  #   tenant_id = data.azurerm_client_config.current.tenant_id
-  #   object_id = data.azurerm_client_config.current.object_id
+  access_policy {
+    tenant_id = data.azurerm_client_config.current.tenant_id
+    object_id = data.azurerm_client_config.current.object_id
 
-  #   key_permissions = [
-  #     "Get",
-  #   ]
+    key_permissions = [
+      "Get",
+    ]
 
-  #   secret_permissions = [
-  #     "Get",
-  #   ]
+    secret_permissions = [
+      "Get",
+    ]
 
-  #   storage_permissions = [
-  #     "Get",
-  #   ]
-  # }
+    storage_permissions = [
+      "Get",
+    ]
+  }
+  access_policy {
+    tenant_id = data.azurerm_client_config.current.tenant_id
+    object_id = azurerm_linux_web_app.frontend.identity[0].principal_id
+
+    secret_permissions = [
+      "Get",
+    ]
+  }
 }
 
 # Store a sample connection string

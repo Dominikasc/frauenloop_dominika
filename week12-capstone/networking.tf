@@ -32,6 +32,29 @@ resource "azurerm_subnet" "backend" {
     address_prefixes     = ["10.0.2.0/24"]
 }
 
+resource "azurerm_subnet" "integration" {
+  name                 = "appservice-integration-subnet"
+  resource_group_name  = azurerm_resource_group.rg.name
+  virtual_network_name = azurerm_virtual_network.vnet.name
+  address_prefixes     = ["10.0.3.0/24"]
+
+  delegation {
+    name = "appservice-delegation"
+    service_delegation {
+      name = "Microsoft.Web/serverFarms"
+      actions = [
+        "Microsoft.Network/virtualNetworks/subnets/action"
+      ]
+    }
+  }
+}
+
+# Enable VNet Integration on the App Service
+resource "azurerm_app_service_virtual_network_swift_connection" "frontend_vnet_integration" {
+  app_service_id = azurerm_linux_web_app.frontend.id
+  subnet_id      = azurerm_subnet.integration.id
+}
+
 
 # Create a public ip
 resource "azurerm_public_ip" "frontend_ip" {
@@ -108,9 +131,8 @@ resource "azurerm_network_interface" "vm_nic" {
   }
 }
 
-# Connect the security group to the network interface
-resource "azurerm_network_interface_security_group_association" "sga" {
-  network_interface_id      = azurerm_network_interface.vm_nic.id
+resource "azurerm_subnet_network_security_group_association" "frontend_nsg_assoc" {
+  subnet_id                 = azurerm_subnet.frontend.id
   network_security_group_id = azurerm_network_security_group.frontend_nsg.id
 }
 
@@ -139,3 +161,40 @@ resource "azurerm_linux_virtual_machine" "backend" {
     }
     disable_password_authentication = true
 }
+
+resource "azurerm_network_security_group" "backend_nsg" {
+  name                = "backend-nsg"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.rg.name
+
+  security_rule {
+    name                       = "AllowFromAppService"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "3000" # Or whatever your backend listens on
+    source_address_prefix      = "10.0.3.0/24" # Integration subnet
+    destination_address_prefix = "*"
+  }
+
+  security_rule {
+    name                       = "DenyAllInbound"
+    priority                   = 200
+    direction                  = "Inbound"
+    access                     = "Deny"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+}
+
+resource "azurerm_network_interface_security_group_association" "backend_nic_nsg" {
+  network_interface_id      = azurerm_network_interface.vm_nic.id
+  network_security_group_id = azurerm_network_security_group.backend_nsg.id
+}
+
+

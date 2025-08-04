@@ -14,6 +14,10 @@ resource "azurerm_linux_web_app" "frontend" {
   resource_group_name = azurerm_resource_group.rg.name
   service_plan_id     = azurerm_service_plan.main.id
 
+  identity {
+    type = "SystemAssigned"
+  }
+  
   site_config {
     application_stack {
       node_version = "12-lts"
