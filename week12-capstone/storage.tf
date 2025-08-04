@@ -34,24 +34,24 @@ resource "azurerm_key_vault" "fl_key_vault" {
   purge_protection_enabled    = false
 
   sku_name = "standard"
-
-  access_policy {
-    tenant_id = data.azurerm_client_config.current.tenant_id
-    object_id = azurerm_linux_web_app.frontend.identity[0].principal_id
-
-    secret_permissions = [
-      "Get",
-    ]
-  }
 }
 
+# Access for Terraform user
 resource "azurerm_key_vault_access_policy" "terraform_user" {
   key_vault_id = azurerm_key_vault.fl_key_vault.id
-
-  tenant_id = data.azurerm_client_config.current.tenant_id
-  object_id = var.user_object_id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = var.user_object_id
 
   secret_permissions = ["Get", "Set", "Delete", "List"]
+}
+
+# Access for Web App Managed Identity
+resource "azurerm_key_vault_access_policy" "frontend_app" {
+  key_vault_id = azurerm_key_vault.fl_key_vault.id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = azurerm_linux_web_app.frontend.identity[0].principal_id
+
+  secret_permissions = ["Get"]
 }
 
 # Store a sample connection string
