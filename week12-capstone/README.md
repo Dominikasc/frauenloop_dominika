@@ -1,6 +1,6 @@
 # 🎓 Capstone project
 
-As the final project of the FrauenLoop "Cloud Engineering Intermediate" cycle, I had to design and deploy the founational Azure infrastructure for a secure Web-Application using Terraform.
+As the final project of the FrauenLoop "Cloud Engineering Intermediate" cycle, I had to design and deploy the foundational Azure infrastructure for a secure Web-Application using Terraform.
 
 The main problem is around making the web app and backend access secure.
 This is the high-level diagram:
