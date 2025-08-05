@@ -1,4 +1,4 @@
-resource "azurerm_resource_group" "rg" {
+resource "azurerm_resource_group" "fl_rg" {
     name      = var.resource_group_name
     location   = var.location
 
@@ -13,13 +13,13 @@ resource "azurerm_virtual_network" "vnet" {
     name                 = var.vnet_name
     address_space        =["10.0.0.0/16"]   
     location             = var.location
-    resource_group_name  = azurerm_resource_group.rg.name
+    resource_group_name  = azurerm_resource_group.fl_rg.name
 }
 
 # Create a frontend subnet
 resource "azurerm_subnet" "frontend" {
     name                 = "webapp-frontend-subnet"
-    resource_group_name  = azurerm_resource_group.rg.name
+    resource_group_name  = azurerm_resource_group.fl_rg.name
     virtual_network_name = azurerm_virtual_network.vnet.name
     address_prefixes     = ["10.0.1.0/24"]
 }
@@ -27,14 +27,14 @@ resource "azurerm_subnet" "frontend" {
 # Create a backend subnet
 resource "azurerm_subnet" "backend" {
     name                 = "webapp-backend-subnet"
-    resource_group_name  = azurerm_resource_group.rg.name
+    resource_group_name  = azurerm_resource_group.fl_rg.name
     virtual_network_name = azurerm_virtual_network.vnet.name
     address_prefixes     = ["10.0.2.0/24"]
 }
 
 resource "azurerm_subnet" "integration" {
   name                 = "appservice-integration-subnet"
-  resource_group_name  = azurerm_resource_group.rg.name
+  resource_group_name  = azurerm_resource_group.fl_rg.name
   virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefixes     = ["10.0.3.0/24"]
 
@@ -59,7 +59,7 @@ resource "azurerm_app_service_virtual_network_swift_connection" "frontend_vnet_i
 # Create a public ip
 resource "azurerm_public_ip" "frontend_ip" {
   name                = "webapp-public-ip"
-  resource_group_name = azurerm_resource_group.rg.name
+  resource_group_name = azurerm_resource_group.fl_rg.name
   location            = var.location
   allocation_method   = "Static"
   sku                 = "Basic"
@@ -69,7 +69,7 @@ resource "azurerm_public_ip" "frontend_ip" {
 resource "azurerm_network_security_group" "frontend_nsg" {
   name                = "frontend-nsg"
   location            = var.location
-  resource_group_name = azurerm_resource_group.rg.name
+  resource_group_name = azurerm_resource_group.fl_rg.name
 
   security_rule {
         name                        = "allow-ssh"
@@ -122,7 +122,7 @@ resource "azurerm_network_security_group" "frontend_nsg" {
 resource "azurerm_network_interface" "vm_nic" {
   name                = "webapp-netinterface"
   location            = var.location
-  resource_group_name = azurerm_resource_group.rg.name
+  resource_group_name = azurerm_resource_group.fl_rg.name
 
   ip_configuration {
     name                          = "internal"
@@ -138,7 +138,7 @@ resource "azurerm_subnet_network_security_group_association" "frontend_nsg_assoc
 
 resource "azurerm_linux_virtual_machine" "backend" {
     name                    = var.vm_name
-    resource_group_name     = azurerm_resource_group.rg.name
+    resource_group_name     = azurerm_resource_group.fl_rg.name
     location                = var.location
     network_interface_ids   = [azurerm_network_interface.vm_nic.id]
     size                    = "Standard_B1s"
@@ -168,7 +168,7 @@ resource "azurerm_linux_virtual_machine" "backend" {
 resource "azurerm_network_security_group" "backend_nsg" {
   name                = "backend-nsg"
   location            = var.location
-  resource_group_name = azurerm_resource_group.rg.name
+  resource_group_name = azurerm_resource_group.fl_rg.name
 
   security_rule {
     name                       = "AllowFromAppService"
@@ -204,7 +204,7 @@ resource "azurerm_network_interface_security_group_association" "backend_nic_nsg
 resource "azurerm_network_security_group" "integration_nsg" {
   name                = "integration-nsg"
   location            = var.location
-  resource_group_name = azurerm_resource_group.rg.name
+  resource_group_name = azurerm_resource_group.fl_rg.name
 
   security_rule {
     name                       = "AllowOutboundToBackend"

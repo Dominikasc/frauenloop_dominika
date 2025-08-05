@@ -2,7 +2,7 @@
 resource "azurerm_service_plan" "main" {
   name                = var.app_service_plan_name
   location            = var.location
-  resource_group_name = azurerm_resource_group.rg.name
+  resource_group_name = azurerm_resource_group.fl_rg.name
   os_type             = "Linux"
   sku_name            = "B1" # Basic tier, 1 instance
 }
@@ -11,7 +11,7 @@ resource "azurerm_service_plan" "main" {
 resource "azurerm_linux_web_app" "frontend" {
   name                = var.web_app_name
   location            = var.location
-  resource_group_name = azurerm_resource_group.rg.name
+  resource_group_name = azurerm_resource_group.fl_rg.name
   service_plan_id     = azurerm_service_plan.main.id
 
   identity {
@@ -34,13 +34,13 @@ resource "azurerm_linux_web_app" "frontend" {
 resource "azurerm_log_analytics_workspace" "main" {
   name                = "webappanalytics"
   location            = var.location
-  resource_group_name = azurerm_resource_group.rg.name
+  resource_group_name = azurerm_resource_group.fl_rg.name
   sku                 = "PerGB2018"
   retention_in_days   = 30
 }
 
-resource "azurerm_monitor_diagnostic_setting" "appservice_diagnostics" {
-  name               = "appservice-diag"
+resource "azurerm_monitor_diagnostic_setting" "fl_appservice_diagnostics" {
+  name               = "fl_appservice-diagnostic"
   target_resource_id = azurerm_key_vault.fl_key_vault.id
   log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
 
@@ -61,8 +61,8 @@ resource "azurerm_monitor_diagnostic_setting" "appservice_diagnostics" {
 
 # Storage account monitoring
 
-resource "azurerm_monitor_diagnostic_setting" "storage_diag" {
-  name                       = "storage-diag"
+resource "azurerm_monitor_diagnostic_setting" "fl_storage_diag" {
+  name                       = "fl_storage-diagnostic"
   target_resource_id         = azurerm_storage_account.fl_storage_account.id
   log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
 

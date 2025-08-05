@@ -1,6 +1,6 @@
 resource "azurerm_storage_account" "fl_storage_account" {
   name     = var.storage_account_name
-  resource_group_name      = azurerm_resource_group.rg.name
+  resource_group_name      = azurerm_resource_group.fl_rg.name
   location                 = var.location
   account_tier             = "Standard"
   account_replication_type = "GRS"
@@ -27,7 +27,7 @@ resource "azurerm_storage_blob" "blob" {
 resource "azurerm_key_vault" "fl_key_vault" {
   name                        = "flwebappkeyvault"
   location                    = var.location
-  resource_group_name         = azurerm_resource_group.rg.name
+  resource_group_name         = azurerm_resource_group.fl_rg.name
   enabled_for_disk_encryption = true
   tenant_id                   = data.azurerm_client_config.current.tenant_id
   soft_delete_retention_days  = 7
@@ -51,11 +51,11 @@ resource "azurerm_key_vault_access_policy" "frontend_app" {
   tenant_id    = data.azurerm_client_config.current.tenant_id
   object_id    = azurerm_linux_web_app.frontend.identity[0].principal_id
 
-  secret_permissions = ["Get"]
+  secret_permissions = ["Get", "Set", "Delete", "List"]
 }
 
 # Store a sample connection string
-resource "azurerm_key_vault_secret" "connection_string" {
+resource "azurerm_key_vault_secret" "fl_connection_string" {
   name         = "SampleConnectionString"
   value        = "Server=tcp:sqlserver.database.windows.net;Database=mydb;User Id=admin;Password=secret;"
   key_vault_id = azurerm_key_vault.fl_key_vault.id
